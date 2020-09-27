@@ -1011,6 +1011,49 @@ namespace Microsoft.Spark.E2ETest.UdfTests
             }
         }
 
+        [Fact]
+        public void TestUdfWithReturnAsArrayList()
+        {
+            // Test simple arrays
+            var schema = new StructType(new StructField[]
+            {
+                new StructField("first", new StringType()),
+                new StructField("last",  new StringType())
+            });
+
+            var data = new GenericRow[]
+            {
+                new GenericRow(new object[] { "John", "Smith" }),
+                new GenericRow(new object[] { "Jane", "Doe" })
+            };
+
+            Func<Column, Column, Column> udf =
+                Udf<string, string, ArrayList>((first, last) => new ArrayList() { first, last });
+
+            DataFrame df = _spark.CreateDataFrame(data, schema);
+            Row[] rows = df.Select(udf(df["first"], df["last"])).Collect().ToArray();
+
+            var expected = new ArrayList[]
+            {
+                new ArrayList() { "John", "Smith" },
+                new ArrayList() { "Jane", "Doe" }
+            };
+
+            Assert.Equal(expected.Length, rows.Length);
+
+            for (int i = 0; i < expected.Length; ++i)
+            {
+                // Test using array
+                Assert.Equal((IEnumerable<ArrayList>)expected[i], rows[i].GetAs<ArrayList[]>(0));
+
+                // Test using ArrayList
+                var actual = rows[i].Get(0);
+                Assert.Equal(rows[i].GetAs<ArrayList>(0), actual);
+                Assert.True(actual is ArrayList);
+                Assert.Equal((IEnumerable<object>)expected[i], ((ArrayList)actual).ToArray());
+            }
+        }
+
         private static string AppendEnumerable<T>(string s, IEnumerable<T> enumerable) =>
             s + "|" + string.Join(",", enumerable);
 
