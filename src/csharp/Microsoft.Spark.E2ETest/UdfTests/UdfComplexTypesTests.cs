@@ -1018,7 +1018,7 @@ namespace Microsoft.Spark.E2ETest.UdfTests
             var schema = new StructType(new StructField[]
             {
                 new StructField("first", new StringType()),
-                new StructField("last",  new StringType())
+                new StructField("last", new StringType())
             });
 
             var data = new GenericRow[]

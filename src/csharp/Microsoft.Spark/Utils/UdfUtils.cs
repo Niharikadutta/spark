@@ -3,8 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
 using Apache.Arrow;
 using Microsoft.Data.Analysis;
 using Microsoft.Spark.Interop;
@@ -121,6 +123,12 @@ namespace Microsoft.Spark.Utils
                 {typeof(ArrowStringDataFrameColumn), "string"},
             };
 
+        internal static string GetReturnArrayList(Type type)
+        {
+            TypeInfo typeInfo = type.GetTypeInfo();
+            return ";";
+        }
+
         /// <summary>
         /// Returns the return type of an UDF in JSON format. This value is used to
         /// create a org.apache.spark.sql.types.DataType object from JSON string.
@@ -132,6 +140,11 @@ namespace Microsoft.Spark.Utils
             if (s_returnTypes.TryGetValue(type, out string value))
             {
                 return $@"""{value}""";
+            }
+
+            if (type == typeof(System.Collections.ArrayList))
+            {
+                GetReturnArrayList(type);
             }
 
             Type dictionaryType = type.ImplementsGenericTypeOf(typeof(IDictionary<,>));
@@ -147,13 +160,15 @@ namespace Microsoft.Spark.Utils
             }
 
             Type enumerableType = type.ImplementsGenericTypeOf(typeof(IEnumerable<>));
-            if (enumerableType != null)
+            if (enumerableType != null || type == typeof(System.Collections.ArrayList))
             {
                 Type elementType = enumerableType.GenericTypeArguments[0];
                 return @"{""type"":""array"", " +
                     $@"""elementType"":{GetReturnType(elementType)}, " +
                     $@"""containsNull"":{elementType.CanBeNull()}}}";
             }
+
+            //Type arrayListType = type.Imp(typeof(System.Collections.ArrayList));
 
             throw new ArgumentException($"{type.FullName} is not supported.");
         }
@@ -166,8 +181,8 @@ namespace Microsoft.Spark.Utils
         /// <returns>JvmObjectReference object to the PythonFunction object</returns>
         internal static JvmObjectReference CreatePythonFunction(IJvmBridge jvm, byte[] command)
         {
-            var arrayList = new ArrayList(jvm);
-            var broadcastVariables = new ArrayList(jvm);
+            var arrayList = new Interop.Internal.Java.Util.ArrayList(jvm);
+            var broadcastVariables = new Interop.Internal.Java.Util.ArrayList(jvm);
             broadcastVariables.AddAll(JvmBroadcastRegistry.GetAll());
             JvmBroadcastRegistry.Clear();
 
@@ -185,7 +200,7 @@ namespace Microsoft.Spark.Utils
 
         private static IJvmObjectReferenceProvider CreateEnvVarsForPythonFunction(IJvmBridge jvm)
         {
-            var environmentVars = new Hashtable(jvm);
+            var environmentVars = new Interop.Internal.Java.Util.Hashtable(jvm);
             string assemblySearchPath = Environment.GetEnvironmentVariable(
                 AssemblySearchPathResolver.AssemblySearchPathsEnvVarName);
             if (!string.IsNullOrEmpty(assemblySearchPath))
