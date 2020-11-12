@@ -56,14 +56,14 @@ else
     sudo apt-get -yq update
     sudo apt-get -yq install dotnet-sdk-3.1
 
-    sudo dotnet tool uninstall dotnet-try --tool-path /usr/share/dotnet-tools || true
-    sudo dotnet tool install dotnet-try --add-source https://dotnet.myget.org/F/dotnet-try/api/v3/index.json --tool-path /usr/share/dotnet-tools --version 1.0.19473.13
+    sudo dotnet tool uninstall Microsoft.dotnet-interactive --tool-path /usr/share/dotnet-tools || true
+    sudo dotnet tool install Microsoft.dotnet-interactive --add-source https://dotnet.myget.org/F/dotnet-try/api/v3/index.json --tool-path /usr/share/dotnet-tools --version 1.0.148005
 
     # copy .NET for Apache Spark jar to SPARK's jar folder
     sudo mkdir -p /tmp/temp_jar
     sudo wget "https://www.nuget.org/api/v2/package/Microsoft.Spark/${SPARK_DOTNET_VERSION}" -O /tmp/temp_jar/"microsoft.spark.${SPARK_DOTNET_VERSION}.nupkg"
     sudo unzip -o /tmp/temp_jar/"microsoft.spark.${SPARK_DOTNET_VERSION}.nupkg" -d /tmp/temp_jar
-    sudo install --verbose --mode 644 /tmp/temp_jar/jars/"microsoft-spark-2.4.x-${SPARK_DOTNET_VERSION}.jar" "/usr/hdp/current/spark2-client/jars/microsoft-spark-2.4.x-${SPARK_DOTNET_VERSION}.jar"
+    sudo install --verbose --mode 644 /tmp/temp_jar/jars/"microsoft-spark-2-4_2.11-${SPARK_DOTNET_VERSION}.jar" "/usr/hdp/current/spark2-client/jars/microsoft-spark-2-4_2.11-${SPARK_DOTNET_VERSION}.jar"
 
     # cleanup unneeded packages
     sudo apt-get autoremove -yq
@@ -73,7 +73,7 @@ else
 
     # Install Microsoft.Spark.Worker
     # Path where packaged worker file (tgz) exists.
-    SRC_WORKER_PATH_OR_URI="https://github.com/dotnet/spark/releases/download/v${SPARK_DOTNET_VERSION}/Microsoft.Spark.Worker.netcoreapp2.1.linux-x64-${SPARK_DOTNET_VERSION}.tar.gz"
+    SRC_WORKER_PATH_OR_URI="https://github.com/dotnet/spark/releases/download/v${SPARK_DOTNET_VERSION}/Microsoft.Spark.Worker.netcoreapp3.1.linux-x64-${SPARK_DOTNET_VERSION}.tar.gz"
 
     # The path on the executor nodes where Microsoft.Spark.Worker executable is installed.
     WORKER_INSTALLATION_PATH=/usr/local/bin
